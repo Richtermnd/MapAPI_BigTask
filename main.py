@@ -6,59 +6,52 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtWidgets import QApplication, QMainWindow
 from MapUI import Ui_MainWindow
+from map_api import *
 
-SCREEN_SIZE = [600, 450]
+requester = MapRequester((55.7, 37.53), "map", (0.005, 0.005))
 
 
 class UI(QMainWindow, Ui_MainWindow):
     def __init__(self):
         super().__init__()
-        self.long = 37.53
-        self.lat = 55.7
-        self.spn_x = 0.005
-        self.spn_y = 0.005
-        self.map_type = "map"
-        self.map_file = None
         self.setupUi(self)
         self.searchbutton.clicked.connect(self.search)
         self.typesmap.currentTextChanged.connect(self.on_combobox_changed)
         self.clear.clicked.connect(self.clear_line)
-        self.typesmap.addItems(["Спутник", "Схема", "Гибрид"])
+        self.typesmap.addItems(["Схема", "Спутник", "Гибрид"])
+        self.displayImage()
 
     def on_combobox_changed(self, value):
         if value == "Схема":
-            self.map_type = "map"
+            pass
         elif value == "Спутник":
-            self.map_type = "sat"
+            pass
         elif value == "Гибрид":
-            self.map_type = "sat,skl"
+            pass
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_PageUp:
-            self.spn_x /= 2
-            self.spn_y /= 2
+            requester.decrease_zoom()
+            self.displayImage()
         elif event.key() == Qt.Key_PageDown:
-            self.spn_x *= 2
-            self.spn_y *= 2
+            requester.increase_zoom()
+            self.displayImage()
         elif event.key() == Qt.Key_Up:
-            self.lat += self.spn_y
+            requester.move("up")
+            self.displayImage()
         elif event.key() == Qt.Key_Down:
-            self.lat -= self.spn_x
+            requester.move("down")
+            self.displayImage()
         elif event.key() == Qt.Key_Left:
-            self.long -= self.spn_y
+            requester.move("left")
+            self.displayImage()
         elif event.key() == Qt.Key_Right:
-            self.long += self.spn_y
+            requester.move("right")
+            self.displayImage()
 
     # Вывод изображения на экран
     def displayImage(self):
-        self.pixmap = QPixmap(self.map_file)
-        self.map.setPixmap(self.pixmap)
-        self.delete_map()
-
-    # Удаление карты
-    def delete_map(self):
-        """При закрытии формы подчищаем за собой"""
-        os.remove(self.map_file)
+        self.map.setPixmap(requester.get_image())
 
     # Очистка строки
     def clear_line(self):
@@ -66,7 +59,7 @@ class UI(QMainWindow, Ui_MainWindow):
 
     # Поиск
     def search(self):
-        self.getImage()
+        pass
 
 
 if __name__ == '__main__':
