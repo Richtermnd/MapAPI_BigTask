@@ -1,6 +1,5 @@
-from io import BytesIO
 import requests
-from PIL import Image
+from PyQt5.QtGui import QPixmap
 
 
 def convert_coords(coords):
@@ -48,7 +47,7 @@ class MapRequester:
         self.params['spn'] = convert_coords((self.spn_lat, self.spn_lon))
         self.params['l'] = self.map_type
 
-    def get_image(self) -> Image:
+    def get_image(self):
         """
         Возвращает объект PIL.Image
         При ошибке возвращает печатает request и возвращает None
@@ -59,4 +58,6 @@ class MapRequester:
         if not response:
             print(response.content)
             return
-        return Image.open(BytesIO(response.content))
+        pixmap = QPixmap()
+        pixmap.loadFromData(response.content)
+        return pixmap
