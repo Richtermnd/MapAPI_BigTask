@@ -2,6 +2,7 @@ import os
 import sys
 
 import requests
+from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtWidgets import QApplication, QMainWindow
 from MapUI import Ui_MainWindow
@@ -20,31 +21,33 @@ class UI(QMainWindow, Ui_MainWindow):
         self.map_file = None
         self.setupUi(self)
         self.searchbutton.clicked.connect(self.search)
+        self.typesmap.currentTextChanged.connect(self.on_combobox_changed)
         self.clear.clicked.connect(self.clear_line)
-        self.typesmap.addItems(["Спутник", "Схема"])
-        self.getImage()
-        self.displayImage()
+        self.typesmap.addItems(["Спутник", "Схема", "Гибрид"])
 
-    # Получение изображения
-    def getImage(self):
-        map_params = {
-            "ll": f"{self.long},{self.lat}",
-            "spn": f"{self.spn_x},{self.spn_y}",
-            "l": self.map_type
-        }
-        map_request = "http://static-maps.yandex.ru/1.x/"
-        response = requests.get(map_request, params=map_params)
+    def on_combobox_changed(self, value):
+        if value == "Схема":
+            self.map_type = "map"
+        elif value == "Спутник":
+            self.map_type = "sat"
+        elif value == "Гибрид":
+            self.map_type = "sat,skl"
 
-        if not response:
-            print("Ошибка выполнения запроса:")
-            print(map_request)
-            print("Http статус:", response.status_code, "(", response.reason, ")")
-            sys.exit(1)
-
-        # Запишем полученное изображение в файл.
-        self.map_file = "map.png"
-        with open(self.map_file, "wb") as file:
-            file.write(response.content)
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key_PageUp:
+            self.spn_x /= 2
+            self.spn_y /= 2
+        elif event.key() == Qt.Key_PageDown:
+            self.spn_x *= 2
+            self.spn_y *= 2
+        elif event.key() == Qt.Key_Up:
+            self.lat += self.spn_y
+        elif event.key() == Qt.Key_Down:
+            self.lat -= self.spn_x
+        elif event.key() == Qt.Key_Left:
+            self.long -= self.spn_y
+        elif event.key() == Qt.Key_Right:
+            self.long += self.spn_y
 
     # Вывод изображения на экран
     def displayImage(self):
@@ -64,7 +67,6 @@ class UI(QMainWindow, Ui_MainWindow):
     # Поиск
     def search(self):
         self.getImage()
-        self.displayImage()
 
 
 if __name__ == '__main__':
