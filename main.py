@@ -8,7 +8,10 @@ from PyQt5.QtWidgets import QApplication, QMainWindow
 from MapUI import Ui_MainWindow
 from map_api import *
 
-requester = MapRequester((55.7, 37.53), "map", (0.005, 0.005))
+
+# (0.005, 0.005) -> (0.005, 0.012)
+# Чтобы при нажатие налево картинка смещалась ровно на один экран
+requester = MapRequester((55.7, 37.53), "map", (0.005, 0.012))
 
 
 class UI(QMainWindow, Ui_MainWindow):
@@ -22,12 +25,14 @@ class UI(QMainWindow, Ui_MainWindow):
         self.displayImage()
 
     def on_combobox_changed(self, value):
+        # Тут можно просто к аттрибуту map_type обращаться
         if value == "Схема":
-            pass
+            requester.map_type = 'map'
         elif value == "Спутник":
-            pass
+            requester.map_type = 'sat'
         elif value == "Гибрид":
-            pass
+            requester.map_type = 'sat,skl'
+        self.displayImage()
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_PageUp:
