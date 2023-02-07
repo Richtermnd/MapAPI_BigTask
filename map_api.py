@@ -58,4 +58,6 @@ class MapRequester:
         if not response:
             print(response.content)
             return
-        return QPixmap().loadFromData(response.content)
+        pixmap = QPixmap()
+        pixmap.loadFromData(response.content)
+        return pixmap
