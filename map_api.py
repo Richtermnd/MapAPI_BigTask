@@ -3,7 +3,7 @@ from PyQt5.QtGui import QPixmap
 
 
 def convert_coords(coords):
-    """ Convert coords to Yandex API forma"""
+    """ Convert coords to Yandex API format"""
     lat, lon = coords
     return f'{lon},{lat}'
 
@@ -63,19 +63,20 @@ class MapRequester:
         params = {'size': '650,450',
                   'll': convert_coords((self.lat, self.lon)),
                   'spn': convert_coords((self.spn_lat, self.spn_lon)),
-                  'l': self.map_type}
+                  'l': self.map_type,
+                  'pt': f'{convert_coords((self.lat, self.lon))},pm2bll'}
         return params
 
     def get_image(self):
         """
         Возвращает QPixmap
-        При ошибке возвращает печатает request и возвращает None
+        При ошибке печатает request и возвращает пустой Qpixmap
         """
         map_api_server = "http://static-maps.yandex.ru/1.x/"
         response = requests.get(map_api_server, params=self.params())
         if not response:
             print(response.content)
-            return
+            return QPixmap()
         pixmap = QPixmap()
         pixmap.loadFromData(response.content)
         return pixmap
