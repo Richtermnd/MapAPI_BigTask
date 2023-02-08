@@ -64,7 +64,9 @@ class UI(QMainWindow, Ui_MainWindow):
 
     # Поиск
     def search(self):
-        pass
+        address = self.searchline.text()
+        requester.search(address)
+        self.displayImage()
 
 
 if __name__ == '__main__':
