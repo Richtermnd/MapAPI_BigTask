@@ -16,12 +16,29 @@ class MapRequester:
         :param map_type: 'map', 'sat' or 'sat,skl'
         :param spn: (lat, lon)
         """
-        self.params = {'size': '650,450'}
         self.lat = ll[0]
         self.lon = ll[1]
         self.spn_lat = spn[0]
         self.spn_lon = spn[1]
         self.map_type = map_type
+
+    def search(self, address):
+        request = "http://geocode-maps.yandex.ru/1.x/"
+        params = {
+            "apikey": "40d1649f-0493-4b70-98ba-98533de7710b",
+            "geocode": address,
+            "format": "json"}
+
+        response = requests.get(request, params=params)
+
+        if not response:
+            print(response.content)
+            return
+
+        obj = response.json()["response"]["GeoObjectCollection"]["featureMember"][0]["GeoObject"]
+        lon, lat = [float(x) for x in obj["Point"]["pos"].split()]
+        self.lat = lat
+        self.lon = lon
 
     def increase_zoom(self):
         self.spn_lat *= 1.5
@@ -42,19 +59,20 @@ class MapRequester:
             case 'up':
                 self.lat += self.spn_lat
 
-    def update_params(self):
-        self.params['ll'] = convert_coords((self.lat, self.lon))
-        self.params['spn'] = convert_coords((self.spn_lat, self.spn_lon))
-        self.params['l'] = self.map_type
+    def params(self):
+        params = {'size': '650,450',
+                  'll': convert_coords((self.lat, self.lon)),
+                  'spn': convert_coords((self.spn_lat, self.spn_lon)),
+                  'l': self.map_type}
+        return params
 
     def get_image(self):
         """
-        Возвращает объект PIL.Image
+        Возвращает QPixmap
         При ошибке возвращает печатает request и возвращает None
         """
-        self.update_params()
         map_api_server = "http://static-maps.yandex.ru/1.x/"
-        response = requests.get(map_api_server, params=self.params)
+        response = requests.get(map_api_server, params=self.params())
         if not response:
             print(response.content)
             return
