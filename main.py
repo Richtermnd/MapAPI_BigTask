@@ -2,60 +2,61 @@ import os
 import sys
 
 import requests
+from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtWidgets import QApplication, QMainWindow
 from MapUI import Ui_MainWindow
+from map_api import *
 
-SCREEN_SIZE = [600, 450]
+
+# (0.005, 0.005) -> (0.005, 0.012)
+# Чтобы при нажатие налево картинка смещалась ровно на один экран
+requester = MapRequester((55.7, 37.53), "map", (0.005, 0.012))
 
 
 class UI(QMainWindow, Ui_MainWindow):
     def __init__(self):
         super().__init__()
-        self.long = 37.53
-        self.lat = 55.7
-        self.spn_x = 0.005
-        self.spn_y = 0.005
-        self.map_type = "map"
-        self.map_file = None
         self.setupUi(self)
         self.searchbutton.clicked.connect(self.search)
+        self.typesmap.currentTextChanged.connect(self.on_combobox_changed)
         self.clear.clicked.connect(self.clear_line)
-        self.typesmap.addItems(["Спутник", "Схема"])
-        self.getImage()
+        self.typesmap.addItems(["Схема", "Спутник", "Гибрид"])
         self.displayImage()
 
-    # Получение изображения
-    def getImage(self):
-        map_params = {
-            "ll": f"{self.long},{self.lat}",
-            "spn": f"{self.spn_x},{self.spn_y}",
-            "l": self.map_type
-        }
-        map_request = "http://static-maps.yandex.ru/1.x/"
-        response = requests.get(map_request, params=map_params)
+    def on_combobox_changed(self, value):
+        # Тут можно просто к аттрибуту map_type обращаться
+        if value == "Схема":
+            requester.map_type = 'map'
+        elif value == "Спутник":
+            requester.map_type = 'sat'
+        elif value == "Гибрид":
+            requester.map_type = 'sat,skl'
+        self.displayImage()
 
-        if not response:
-            print("Ошибка выполнения запроса:")
-            print(map_request)
-            print("Http статус:", response.status_code, "(", response.reason, ")")
-            sys.exit(1)
-
-        # Запишем полученное изображение в файл.
-        self.map_file = "map.png"
-        with open(self.map_file, "wb") as file:
-            file.write(response.content)
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key_PageUp:
+            requester.decrease_zoom()
+            self.displayImage()
+        elif event.key() == Qt.Key_PageDown:
+            requester.increase_zoom()
+            self.displayImage()
+        elif event.key() == Qt.Key_Up:
+            requester.move("up")
+            self.displayImage()
+        elif event.key() == Qt.Key_Down:
+            requester.move("down")
+            self.displayImage()
+        elif event.key() == Qt.Key_Left:
+            requester.move("left")
+            self.displayImage()
+        elif event.key() == Qt.Key_Right:
+            requester.move("right")
+            self.displayImage()
 
     # Вывод изображения на экран
     def displayImage(self):
-        self.pixmap = QPixmap(self.map_file)
-        self.map.setPixmap(self.pixmap)
-        self.delete_map()
-
-    # Удаление карты
-    def delete_map(self):
-        """При закрытии формы подчищаем за собой"""
-        os.remove(self.map_file)
+        self.map.setPixmap(requester.get_image())
 
     # Очистка строки
     def clear_line(self):
@@ -63,7 +64,8 @@ class UI(QMainWindow, Ui_MainWindow):
 
     # Поиск
     def search(self):
-        self.getImage()
+        address = self.searchline.text()
+        requester.search(address)
         self.displayImage()
 
 
