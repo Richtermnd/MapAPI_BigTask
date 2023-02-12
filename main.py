@@ -1,3 +1,4 @@
+import math
 import os
 import sys
 
@@ -5,6 +6,8 @@ import requests
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtWidgets import QApplication, QMainWindow
+from PyQt5 import QtCore
+
 from MapUI import Ui_MainWindow
 from map_api import *
 
@@ -22,6 +25,7 @@ class UI(QMainWindow, Ui_MainWindow):
         self.typesmap.currentTextChanged.connect(self.on_combobox_changed)
         self.clear.clicked.connect(self.clear_line)
         self.typesmap.addItems(["Схема", "Спутник", "Гибрид"])
+        self.map.installEventFilter(self)
         self.displayImage()
 
     def on_combobox_changed(self, value):
@@ -53,6 +57,18 @@ class UI(QMainWindow, Ui_MainWindow):
         elif event.key() == Qt.Key_Right:
             requester.move("right")
             self.displayImage()
+
+    def eventFilter(self, obj, event):
+        if event.type() == QtCore.QEvent.MouseButtonPress:
+            print(event.pos())
+            x, y = event.x(), event.y()
+            w = 450
+            h = 650
+            res_lat = (requester.lat - requester.spn_lat / 2) + requester.spn_lat * y / h
+            res_lon = (requester.lon - requester.spn_lon / 2) + requester.spn_lon * x / w
+            print(res_lon, res_lat)
+            print(requester.lon, requester.lat)
+        return super(UI, self).eventFilter(obj, event)
 
     # Вывод изображения на экран
     def displayImage(self):
