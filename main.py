@@ -26,7 +26,13 @@ class UI(QMainWindow, Ui_MainWindow):
         self.clear.clicked.connect(self.clear_line)
         self.typesmap.addItems(["Схема", "Спутник", "Гибрид"])
         self.map.installEventFilter(self)
-        self.displayImage()
+        self.searchline.setText("Оренбург")
+#        self.postcode.clicked.connect(self.display_info)
+        self.searchbutton.click()
+
+    def display_info(self):
+        information = requester.get_address(self.postcode.isChecked())
+        self.info.setText(information)
 
     def on_combobox_changed(self, value):
         # Тут можно просто к аттрибуту map_type обращаться
@@ -60,14 +66,13 @@ class UI(QMainWindow, Ui_MainWindow):
 
     def eventFilter(self, obj, event):
         if event.type() == QtCore.QEvent.MouseButtonPress:
-            print(event.pos())
             x, y = event.x(), event.y()
-            w = 450
-            h = 650
-            res_lat = (requester.lat - requester.spn_lat / 2) + requester.spn_lat * y / h
+            w = 650
+            h = 450
+            res_lat = (requester.lat + requester.spn_lat / 2) - requester.spn_lat * y / h
             res_lon = (requester.lon - requester.spn_lon / 2) + requester.spn_lon * x / w
-            print(res_lon, res_lat)
-            print(requester.lon, requester.lat)
+            requester.set_mark_coords(res_lat, res_lon)
+            self.displayImage()
         return super(UI, self).eventFilter(obj, event)
 
     # Вывод изображения на экран
@@ -82,6 +87,7 @@ class UI(QMainWindow, Ui_MainWindow):
     def search(self):
         address = self.searchline.text()
         requester.search(address)
+        self.display_info()
         self.displayImage()
 
 
