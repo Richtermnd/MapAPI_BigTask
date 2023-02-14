@@ -61,7 +61,11 @@ class MapRequester:
     def get_address(self, postal_code=False):
         address = self.geo_obj["metaDataProperty"]["GeocoderMetaData"]["Address"]["formatted"]
         if postal_code:
-            address += ' ' + self.geo_obj["metaDataProperty"]["GeocoderMetaData"]["Address"]["postal_code"]
+            # Тут нужна доп.проверка, что postal_code есть для этого адресса
+            if "postal_code" in self.geo_obj["metaDataProperty"]["GeocoderMetaData"]["Address"].keys():
+                address += ' ' + self.geo_obj["metaDataProperty"]["GeocoderMetaData"]["Address"]["postal_code"]
+            else:
+                address += " " + "Нет почтового индекса"
         return address
 
     def get_org(self):

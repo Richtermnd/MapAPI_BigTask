@@ -27,7 +27,7 @@ class UI(QMainWindow, Ui_MainWindow):
         self.typesmap.addItems(["Схема", "Спутник", "Гибрид"])
         self.map.installEventFilter(self)
         self.searchline.setText("Оренбург")
-#        self.postcode.clicked.connect(self.display_info)
+        self.postcode.clicked.connect(self.display_info)
         self.searchbutton.click()
 
     def display_info(self):
