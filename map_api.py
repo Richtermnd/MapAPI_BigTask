@@ -61,7 +61,10 @@ class MapRequester:
     def get_address(self, postal_code=False):
         address = self.geo_obj["metaDataProperty"]["GeocoderMetaData"]["Address"]["formatted"]
         if postal_code:
-            address += ' ' + self.geo_obj["metaDataProperty"]["GeocoderMetaData"]["Address"]["postal_code"]
+            if "postal_code" in self.geo_obj["metaDataProperty"]["GeocoderMetaData"]["Address"].keys():
+                address += ' ' + self.geo_obj["metaDataProperty"]["GeocoderMetaData"]["Address"]["postal_code"]
+            else:
+                address += " Нет почтового индекса"
         return address
 
     def get_org(self):
@@ -73,15 +76,16 @@ class MapRequester:
         api_key = 'dda3ddba-c9ea-4ead-9010-f43fbc15c6e3'
         params = {
             "apikey": api_key,
-            'text': convert_coords((self.lat, self.lon)),
-            "lang": "ru_RU"
+            'text': self.get_address(),
+            "lang": "ru_RU",
+            "type": "biz"
         }
         response = requests.get(request, params=params)
         if not response:
             print(response.content)
             return
         json_response = response.json()
-        lat, lon = json_response['features'][0]["geometry"]["coordinates"]
+        lon, lat = json_response['features'][0]["geometry"]["coordinates"]
         if distance((self.lat, self.lon), (lat, lon)) <= 50:
             return json_response['features'][0]["properties"]["CompanyMetaData"]["name"]
         else:
@@ -139,3 +143,8 @@ class MapRequester:
         pixmap = QPixmap()
         pixmap.loadFromData(response.content)
         return pixmap
+
+
+requester = MapRequester((51.777781, 55.108994), "map", (0.005, 0.012))
+requester.search('Проспект Победы 13к3')
+print(requester.get_org())
