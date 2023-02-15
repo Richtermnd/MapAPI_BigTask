@@ -68,10 +68,6 @@ class MapRequester:
         return address
 
     def get_org(self):
-        """
-        НЕ РАБОТАЕТ
-        Потом реворкну
-        """
         request = "https://search-maps.yandex.ru/v1/"
         api_key = 'dda3ddba-c9ea-4ead-9010-f43fbc15c6e3'
         params = {
