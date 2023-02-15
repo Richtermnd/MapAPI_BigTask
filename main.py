@@ -44,6 +44,7 @@ class UI(QMainWindow, Ui_MainWindow):
             requester.map_type = 'sat,skl'
         self.displayImage()
 
+    # Обработка нажатия клавиатуры
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_PageUp:
             requester.decrease_zoom()
@@ -64,7 +65,7 @@ class UI(QMainWindow, Ui_MainWindow):
             requester.move("right")
             self.displayImage()
 
-    # Обработка нажатия
+    # Обработка нажатия мыши
     def eventFilter(self, obj, event):
         if event.type() == QtCore.QEvent.MouseButtonPress:
             x, y = event.x(), event.y()
