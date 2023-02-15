@@ -65,23 +65,20 @@ class MapRequester:
         return address
 
     def get_org(self):
-        """
-        НЕ РАБОТАЕТ
-        Потом реворкну
-        """
         request = "https://search-maps.yandex.ru/v1/"
         api_key = 'dda3ddba-c9ea-4ead-9010-f43fbc15c6e3'
         params = {
             "apikey": api_key,
-            'text': convert_coords((self.lat, self.lon)),
-            "lang": "ru_RU"
+            'text': self.get_address(),
+            "lang": "ru_RU",
+            "type": 'biz'
         }
         response = requests.get(request, params=params)
         if not response:
             print(response.content)
             return
         json_response = response.json()
-        lat, lon = json_response['features'][0]["geometry"]["coordinates"]
+        lon, lat = json_response['features'][0]["geometry"]["coordinates"]
         if distance((self.lat, self.lon), (lat, lon)) <= 50:
             return json_response['features'][0]["properties"]["CompanyMetaData"]["name"]
         else:
