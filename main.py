@@ -26,9 +26,7 @@ class UI(QMainWindow, Ui_MainWindow):
         self.clear.clicked.connect(self.clear_line)
         self.typesmap.addItems(["Схема", "Спутник", "Гибрид"])
         self.map.installEventFilter(self)
-        self.searchline.setText("Оренбург")
         self.postcode.clicked.connect(self.display_info)
-        self.searchbutton.click()
 
     def display_info(self):
         information = requester.get_address(self.postcode.isChecked())
@@ -68,13 +66,17 @@ class UI(QMainWindow, Ui_MainWindow):
     # Обработка нажатия мыши
     def eventFilter(self, obj, event):
         if event.type() == QtCore.QEvent.MouseButtonPress:
-            x, y = event.x(), event.y()
-            w = 650
-            h = 450
-            res_lat = (requester.lat + requester.spn_lat / 2) - requester.spn_lat * y / h
-            res_lon = (requester.lon - requester.spn_lon / 2) + requester.spn_lon * x / w
-            requester.set_mark_coords(res_lat, res_lon)
-            self.displayImage()
+            if event.button() == 1:
+                x, y = event.x(), event.y()
+                w = 650
+                h = 450
+                res_lat = (requester.lat + requester.spn_lat / 2) - requester.spn_lat * y / h
+                res_lon = (requester.lon - requester.spn_lon / 2) + requester.spn_lon * x / w
+                requester.set_mark_coords(res_lat, res_lon)
+                self.display_info()
+                self.displayImage()
+            elif event.button() == 2:
+                self.info.setText(requester.get_org())
         return super(UI, self).eventFilter(obj, event)
 
     # Вывод изображения на экран
@@ -84,6 +86,9 @@ class UI(QMainWindow, Ui_MainWindow):
     # Очистка строки
     def clear_line(self):
         self.searchline.setText("")
+        requester.reset()
+        self.info.setText('')
+        self.displayImage()
 
     # Поиск
     def search(self):

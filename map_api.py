@@ -48,6 +48,7 @@ class MapRequester:
 
         response = requests.get(request, params=params)
         if not response:
+            print(4)
             print(response.content)
             return
 
@@ -78,26 +79,28 @@ class MapRequester:
         }
         response = requests.get(request, params=params)
         if not response:
+            print(3)
             print(response.content)
             return
         json_response = response.json()
         lon, lat = json_response['features'][0]["geometry"]["coordinates"]
-        if distance((self.lat, self.lon), (lat, lon)) <= 50:
+
+        if distance((self.mark_lat, self.mark_lon), (lat, lon)) <= 50:
             return json_response['features'][0]["properties"]["CompanyMetaData"]["name"]
         else:
-            return ''
+            return 'Функция расстояния кривая, так что практически никогда не работает'
 
     def reset(self):
         self.is_mark = False
         self.geo_obj = None
 
     def increase_zoom(self):
-        self.spn_lat *= 1.5
-        self.spn_lon *= 1.5
+        self.spn_lat = max(self.spn_lat / 1.5, 0.0005)
+        self.spn_lon = max(self.spn_lon / 1.5, 0.0005)
 
     def decrease_zoom(self):
-        self.spn_lat /= 1.5
-        self.spn_lon /= 1.5
+        self.spn_lat = min(1.5 * self.spn_lat, 1)
+        self.spn_lon = min(1.5 * self.spn_lon, 1)
 
     def move(self, direction):
         match direction:
@@ -119,12 +122,21 @@ class MapRequester:
             params['pt'] = f'{convert_coords((self.mark_lat, self.mark_lon))},pm2bll'
         return params
 
-    def set_coords(self, lat, lon):
-        self.lat, self.lon = lat, lon
-        self.is_mark = True
-
     def set_mark_coords(self, lat, lon):
         self.mark_lat, self.mark_lon = lat, lon
+        self.is_mark = True
+        request = "http://geocode-maps.yandex.ru/1.x/"
+        params = {
+            "apikey": "40d1649f-0493-4b70-98ba-98533de7710b",
+            "geocode": convert_coords((lat, lon)),
+            "format": "json"}
+
+        response = requests.get(request, params=params)
+        if not response:
+            print(2)
+            print(response.content)
+            return
+        self.geo_obj = response.json()["response"]["GeoObjectCollection"]["featureMember"][0]["GeoObject"]
 
     def get_image(self):
         """
@@ -134,7 +146,9 @@ class MapRequester:
         map_api_server = "http://static-maps.yandex.ru/1.x/"
         response = requests.get(map_api_server, params=self.params())
         if not response:
+            print(1)
             print(response.content)
+            print(response.url)
             return QPixmap()
         pixmap = QPixmap()
         pixmap.loadFromData(response.content)
