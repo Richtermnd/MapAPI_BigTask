@@ -143,8 +143,3 @@ class MapRequester:
         pixmap = QPixmap()
         pixmap.loadFromData(response.content)
         return pixmap
-
-
-requester = MapRequester((51.777781, 55.108994), "map", (0.005, 0.012))
-requester.search('Проспект Победы 13к3')
-print(requester.get_org())

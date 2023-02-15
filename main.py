@@ -1,3 +1,4 @@
+import math
 import os
 import sys
 
@@ -5,6 +6,8 @@ import requests
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtWidgets import QApplication, QMainWindow
+from PyQt5 import QtCore
+
 from MapUI import Ui_MainWindow
 from map_api import *
 
@@ -22,7 +25,14 @@ class UI(QMainWindow, Ui_MainWindow):
         self.typesmap.currentTextChanged.connect(self.on_combobox_changed)
         self.clear.clicked.connect(self.clear_line)
         self.typesmap.addItems(["Схема", "Спутник", "Гибрид"])
-        self.displayImage()
+        self.map.installEventFilter(self)
+        self.searchline.setText("Оренбург")
+        self.postcode.clicked.connect(self.display_info)
+        self.searchbutton.click()
+
+    def display_info(self):
+        information = requester.get_address(self.postcode.isChecked())
+        self.info.setText(information)
 
     def on_combobox_changed(self, value):
         # Тут можно просто к аттрибуту map_type обращаться
@@ -34,6 +44,7 @@ class UI(QMainWindow, Ui_MainWindow):
             requester.map_type = 'sat,skl'
         self.displayImage()
 
+    # Обработка нажатия клавиатуры
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_PageUp:
             requester.decrease_zoom()
@@ -54,6 +65,18 @@ class UI(QMainWindow, Ui_MainWindow):
             requester.move("right")
             self.displayImage()
 
+    # Обработка нажатия мыши
+    def eventFilter(self, obj, event):
+        if event.type() == QtCore.QEvent.MouseButtonPress:
+            x, y = event.x(), event.y()
+            w = 650
+            h = 450
+            res_lat = (requester.lat + requester.spn_lat / 2) - requester.spn_lat * y / h
+            res_lon = (requester.lon - requester.spn_lon / 2) + requester.spn_lon * x / w
+            requester.set_mark_coords(res_lat, res_lon)
+            self.displayImage()
+        return super(UI, self).eventFilter(obj, event)
+
     # Вывод изображения на экран
     def displayImage(self):
         self.map.setPixmap(requester.get_image())
@@ -66,6 +89,7 @@ class UI(QMainWindow, Ui_MainWindow):
     def search(self):
         address = self.searchline.text()
         requester.search(address)
+        self.display_info()
         self.displayImage()
 
 
