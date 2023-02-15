@@ -64,6 +64,7 @@ class UI(QMainWindow, Ui_MainWindow):
             requester.move("right")
             self.displayImage()
 
+    # Обработка нажатия
     def eventFilter(self, obj, event):
         if event.type() == QtCore.QEvent.MouseButtonPress:
             x, y = event.x(), event.y()
